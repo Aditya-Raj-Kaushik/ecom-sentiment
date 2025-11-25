@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+scikit-learn
+pandas
+numpy
+joblib
+nltk
+beautifulsoup4
+requests
+matplotlib
+seaborn
+wordcloud
