@@ -1,21 +1,15 @@
-# src/api_main.py
-
 from fastapi import FastAPI
 from pydantic import BaseModel
 from pathlib import Path
 import joblib
 
-# ===== PATHS ===== #
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = PROJECT_ROOT / "models" / "sentiment_model.pkl"
-# ================= #
 
-# Load model+vectorizer
 bundle = joblib.load(MODEL_PATH)
 model = bundle["model"]
 vectorizer = bundle["vectorizer"]
 
-# Rule-based negative keywords
 NEGATIVE_KEYWORDS = [
     "battery", "drain", "drains", "heating", "overheating",
     "slow", "lag", "hang", "stuck",
@@ -41,7 +35,6 @@ def root():
 def predict(payload: ReviewInput):
     text = payload.review_text.lower()
 
-    # --- RULE BOOSTING ---
     if any(k in text for k in NEGATIVE_KEYWORDS):
         return {
             "input_text": payload.review_text,
@@ -50,7 +43,6 @@ def predict(payload: ReviewInput):
             "note": "Rule-boosted (keyword hit)"
         }
 
-    # --- ML MODEL PREDICTION ---
     X_vec = vectorizer.transform([text])
     pred = model.predict(X_vec)[0]
     proba = model.predict_proba(X_vec)[0]

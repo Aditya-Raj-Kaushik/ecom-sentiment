@@ -1,5 +1,3 @@
-# src/train_model.py
-
 import os
 from pathlib import Path
 import joblib
@@ -18,7 +16,6 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split
 
-# ========= PATHS ========= #
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_PATH = PROJECT_ROOT / "data" / "processed" / "reviews_processed.csv"
 
@@ -38,7 +35,6 @@ CM_PATH = PLOTS_DIR / "confusion_matrix.png"
 print(f"[INFO] Loading data from: {DATA_PATH}")
 df = pd.read_csv(DATA_PATH)
 
-# ====== CLEAN DATA =======
 df = df.dropna(subset=["clean_text", "sentiment"])
 df["clean_text"] = df["clean_text"].astype(str)
 df = df[df["clean_text"].str.strip() != ""]
@@ -49,12 +45,10 @@ print(f"[INFO] Loaded {len(df)} rows for training")
 X = df["clean_text"]
 y = df["sentiment"]
 
-# Train-Test Split
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# ======== TF-IDF (Improved) ========
 tfidf = TfidfVectorizer(
     max_features=8000,
     ngram_range=(1, 3),
@@ -63,11 +57,9 @@ tfidf = TfidfVectorizer(
 X_train_vec = tfidf.fit_transform(X_train)
 X_test_vec = tfidf.transform(X_test)
 
-# ======== MODEL ========
 model = LogisticRegression(max_iter=1200)
 model.fit(X_train_vec, y_train)
 
-# ======== PREDICT ========
 y_pred = model.predict(X_test_vec)
 
 accuracy = accuracy_score(y_test, y_pred)
@@ -83,7 +75,6 @@ print(f"Recall:    {recall:.4f}")
 print(f"F1 Score:  {f1:.4f}")
 print("\nClassification Report:\n", report)
 
-# ======== SAVE PERFORMANCE TEXT ========
 with open(PERFORMANCE_REPORT_PATH, "w") as f:
     f.write("===== SENTIMENT MODEL PERFORMANCE =====\n")
     f.write(f"Accuracy:  {accuracy:.4f}\n")
@@ -95,7 +86,6 @@ with open(PERFORMANCE_REPORT_PATH, "w") as f:
 
 print(f"[INFO] Performance report saved → {PERFORMANCE_REPORT_PATH}")
 
-# ======== CONFUSION MATRIX ========
 cm = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(5, 4))
 sns.heatmap(
@@ -114,6 +104,5 @@ plt.savefig(CM_PATH, dpi=300, bbox_inches="tight")
 plt.close()
 print(f"[INFO] Confusion matrix saved → {CM_PATH}")
 
-# ======== SAVE MODEL ========
 joblib.dump({"model": model, "vectorizer": tfidf}, MODEL_PATH)
 print(f"[MODEL SAVED SUCCESSFULLY] → {MODEL_PATH}")
